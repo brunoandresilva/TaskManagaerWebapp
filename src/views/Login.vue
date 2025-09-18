@@ -46,7 +46,9 @@ async function onSubmit() {
         </button>
       </router-link>
 
-      <div class="w-full max-w-md bg-[#DBCAAF] shadow-lg rounded-2xl p-8">
+      <div
+        class="w-full max-w-md bg-primary shadow-lg rounded-2xl p-8 opacity-95"
+      >
         <h1 class="text-2xl font-semibold text-gray-800">Login</h1>
 
         <form class="mt-6 space-y-4" @submit.prevent="onSubmit">
@@ -73,7 +75,7 @@ async function onSubmit() {
           <button
             :disabled="loading"
             type="submit"
-            class="w-32 mx-auto block rounded-[20px] bg-[#C5AF8C] text-gray-700 py-2.5 font-medium hover:bg-[#9A7F56] disabled:opacity-60"
+            class="w-32 mx-auto block rounded-[20px] bg-btn text-gray-700 py-2.5 font-medium hover:bg-btn_hover disabled:opacity-60"
           >
             {{ loading ? "Loading…" : "Login" }}
           </button>
@@ -82,7 +84,7 @@ async function onSubmit() {
         </form>
 
         <button
-          class="mt-2 px-2 w-35 mx-auto block rounded-[20px] bg-[#C5AF8C] text-gray-700 font-small hover:bg-[#9A7F56] disabled:opacity-60"
+          class="mt-2 px-2 w-35 mx-auto block rounded-[20px] bg-btn text-gray-700 font-small hover:bg-btn_hover disabled:opacity-60"
         >
           Forgot password
         </button>

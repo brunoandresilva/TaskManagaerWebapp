@@ -46,13 +46,15 @@ async function onSubmit() {
     <div class="relative flex items-center justify-center min-h-screen">
       <router-link to="/login">
         <button
-          class="mt-6 mr-6 absolute top-0 right-0 w-32 mx-auto block rounded-[20px] bg-[#C5AF8C] text-gray-700 py-2.5 font-medium hover:bg-[#9A7F56] disabled:opacity-60"
+          class="mt-6 mr-6 absolute top-0 right-0 w-32 mx-auto block rounded-[20px] bg-btn text-gray-700 py-2.5 font-medium hover:bg-btn_hover disabled:opacity-60"
         >
           Login
         </button>
       </router-link>
 
-      <div class="w-full max-w-md bg-[#DBCAAF] shadow-lg rounded-2xl p-8">
+      <div
+        class="w-full max-w-md bg-primary shadow-lg rounded-2xl p-8 opacity-95"
+      >
         <h1 class="text-2xl font-semibold text-gray-800">Register</h1>
 
         <form class="mt-6 space-y-4" @submit.prevent="onSubmit">
@@ -95,7 +97,7 @@ async function onSubmit() {
           <button
             :disabled="loading"
             type="submit"
-            class="w-32 mx-auto block rounded-[20px] bg-[#C5AF8C] text-gray-700 py-2.5 font-medium hover:bg-[#9A7F56] disabled:opacity-60"
+            class="w-32 mx-auto block rounded-[20px] bg-btn text-gray-700 py-2.5 font-medium hover:bg-btn_hover disabled:opacity-60"
           >
             {{ loading ? "Loading…" : "Create account" }}
           </button>
