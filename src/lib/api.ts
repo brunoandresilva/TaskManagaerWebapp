@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { getToken } from "@/lib/token";
+import { getToken, clearToken } from "@/lib/token";
+import router from "@/router";
 
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
@@ -30,11 +31,37 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+let isHandlingAuthError = false; // evita loops
 api.interceptors.response.use(
   (res) => res,
-  (err: AxiosError) => {
-    // Optional: handle 401s here
-    // if (err.response?.status === 401) { /* e.g., redirect to /login */ }
+  async (err: AxiosError) => {
+    const status = err.response?.status;
+    const data = err.response?.data ?? {};
+    const code: string | undefined =
+      typeof data === "object" && data !== null
+        ? (data as Record<string, any>).code ||
+          (data as Record<string, any>).error ||
+          (data as Record<string, any>).message
+        : undefined;
+
+    // Heurística para 403 por token inválido/expirado (enquanto o backend não normaliza para 401)
+    const isInvalidToken403 =
+      status === 403 &&
+      typeof code === "string" &&
+      /token|expired|signature|invalid/i.test(code);
+
+    if ((status === 401 || isInvalidToken403) && !isHandlingAuthError) {
+      isHandlingAuthError = true;
+      clearToken();
+      const curr = router.currentRoute.value;
+      if (curr.path !== "/login") {
+        await router.push({
+          path: "/login",
+          query: { redirect: curr.fullPath },
+        });
+      }
+      isHandlingAuthError = false;
+    }
     return Promise.reject(err);
   }
 );
