@@ -54,7 +54,7 @@ export const useAuthStore = defineStore("auth", {
       if (!this.token) return;
       this.loadingMain = true;
       try {
-        const { data } = await api.get<DashboardResponse>("/api/tasks/list"); // endpoint for testing purposes, will change to retreive user tasks
+        const { data } = await api.get<DashboardResponse>("/api/tasks");
         console.log(data);
         this.tasks = data;
         this.done_counter = data.filter(
