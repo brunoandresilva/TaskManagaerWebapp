@@ -11,6 +11,7 @@ type Task = {
   status: "todo" | "in_progress" | "done";
   priority: 0 | 1 | 2 | 3;
   due_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -95,6 +96,29 @@ export const useAuthStore = defineStore("auth", {
         console.log(data);
       } catch (error) {
         console.error("Error creating task:", error);
+        throw error;
+      }
+    },
+    async deleteTask(id: number | null) {
+      if (!this.token) return;
+      try {
+        await api.delete(`/api/tasks/${id}`);
+        this.tasks = this.tasks.filter((task) => task.id !== id);
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        throw error;
+      }
+    },
+    async editTask(id: number, updatedTask: Partial<Task>) {
+      if (!this.token) return;
+      try {
+        const { data } = await api.patch(`/api/tasks/${id}`, updatedTask);
+        const index = this.tasks.findIndex((task) => task.id === id);
+        if (index !== -1) {
+          this.tasks[index] = data;
+        }
+      } catch (error) {
+        console.error("Error editing task:", error);
         throw error;
       }
     },

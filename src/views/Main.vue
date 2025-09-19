@@ -12,13 +12,20 @@ const sidePanelOpen = ref(false);
 const auth = useAuthStore();
 const router = useRouter();
 const showAddTaskModal = ref(false);
+const showDeleteConfirmModal = ref(false);
+let taskIdToDelete = ref<number | null>(null);
+const showEditTaskModal = ref(false);
+let taskIdToEdit = ref<number | null>(null);
 
 type Task = {
+  id?: number;
+  user_id?: number;
   title: string;
   description: string | null;
   status: "todo" | "in_progress" | "done";
   priority: 0 | 1 | 2 | 3;
   due_at?: string | null;
+  completed_at?: string | null;
 };
 
 const newTask = ref<Task>({
@@ -28,6 +35,7 @@ const newTask = ref<Task>({
   priority: 0,
   due_at: "",
 });
+const updatedTask = ref<Partial<Task>>({});
 
 // Filter state and logic
 const statusOptions = [
@@ -97,11 +105,64 @@ async function submitTask() {
 }
 
 function handleDeleteTask(id: number) {
-  // TODO: implement delete task
+  taskIdToDelete.value = id;
+  showDeleteConfirmModal.value = true;
+}
+
+async function confirmDeleteTask() {
+  try {
+    await auth.deleteTask(taskIdToDelete.value);
+    toast.success("Task deleted successfully!");
+  } catch (error) {
+    toast.error("Error deleting task");
+  } finally {
+    showDeleteConfirmModal.value = false;
+    taskIdToDelete.value = null;
+  }
 }
 
 function handleEditTask(id: number) {
-  // TODO: implement edit task
+  const task = auth.tasks.find((t) => t.id === id);
+  if (task) {
+    updatedTask.value = { ...task }; // Copies all fields as defaults
+    // Format due_at for date input
+    if (task.due_at) {
+      updatedTask.value.due_at = task.due_at.slice(0, 10);
+    }
+    // Format completed_at for date input
+    if (task.completed_at) {
+      updatedTask.value.completed_at = task.completed_at.slice(0, 10);
+    }
+  }
+  console.log("updatedTask:", updatedTask.value);
+  taskIdToEdit.value = id;
+  showEditTaskModal.value = true;
+}
+
+async function confirmEditTask() {
+  if (!taskIdToEdit.value) return;
+
+  console.log("Updated Task Data:", updatedTask.value);
+
+  if (updatedTask.value.due_at === "" || updatedTask.value.due_at === null) {
+    delete updatedTask.value.due_at;
+  }
+  if (
+    updatedTask.value.completed_at === "" ||
+    updatedTask.value.completed_at === null
+  ) {
+    delete updatedTask.value.completed_at;
+  }
+
+  try {
+    await auth.editTask(taskIdToEdit.value, updatedTask.value);
+    toast.success("Task edited successfully!");
+  } catch (error) {
+    toast.error("Error editing task");
+  } finally {
+    showEditTaskModal.value = false;
+    taskIdToEdit.value = null;
+  }
 }
 </script>
 
@@ -307,6 +368,136 @@ function handleEditTask(id: number) {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Edit Task Modal -->
+    <transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="showEditTaskModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+      >
+        <div class="bg-btn rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h2 class="text-xl font-bold mb-4">Edit Task</h2>
+          <form @submit.prevent="confirmEditTask">
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Title</label>
+              <input
+                v-model="updatedTask.title"
+                type="text"
+                placeholder="Task Title"
+                class="w-full bg-primary border rounded px-3 py-2"
+              />
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Description</label>
+              <textarea
+                v-model="updatedTask.description"
+                placeholder="Task Description"
+                class="w-full bg-primary border rounded px-3 py-2"
+                rows="2"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Status</label>
+              <select
+                v-model="updatedTask.status"
+                class="w-full bg-primary border rounded px-3 py-2"
+              >
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Priority</label>
+              <select
+                v-model="updatedTask.priority"
+                class="w-full bg-primary border rounded px-3 py-2"
+              >
+                <option :value="0">Low</option>
+                <option :value="1">Medium</option>
+                <option :value="2">High</option>
+                <option :value="3">Critical</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Due At</label>
+              <input
+                v-model="updatedTask.due_at"
+                type="date"
+                class="w-full bg-primary border rounded px-3 py-2"
+              />
+            </div>
+            <div class="mb-4">
+              <label class="block font-semibold mb-1">Completed At</label>
+              <input
+                v-model="updatedTask.completed_at"
+                type="date"
+                class="w-full bg-primary border rounded px-3 py-2"
+              />
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                @click="showEditTaskModal = false"
+                class="px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 rounded bg-primary text-gray-600 font-semibold hover:bg-btn_hover"
+              >
+                Confirm
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
+    <transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="showDeleteConfirmModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+      >
+        <div class="bg-btn rounded-lg shadow-lg p-6 w-full max-w-sm">
+          <h2 class="text-xl font-bold mb-4 text-center text-gray-700">
+            Delete Task
+          </h2>
+          <p class="mb-6 text-center text-gray-700">
+            Are you sure you want to delete this task? This action cannot be
+            undone.
+          </p>
+          <div class="flex justify-end gap-2">
+            <button
+              @click="showDeleteConfirmModal = false"
+              class="px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmDeleteTask"
+              class="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     </transition>

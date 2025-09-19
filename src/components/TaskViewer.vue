@@ -69,22 +69,32 @@
             </button>
           </div>
         </div>
-        <div
-          v-if="expandedTask === task.id"
-          class="mt-3 text-gray-800 text-sm bg-primary rounded p-3"
+        <transition
+          name="fade-details"
+          enter-active-class="transition duration-500"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-500"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
         >
-          <div>
-            <strong>Description:</strong>
-            {{ task.description || "No description" }}
+          <div
+            v-if="expandedTask === task.id"
+            class="mt-3 text-gray-800 text-sm bg-primary rounded p-3 overflow-hidden"
+          >
+            <div>
+              <strong>Description:</strong>
+              {{ task.description || "No description" }}
+            </div>
+            <div><strong>Due at:</strong> {{ formatDate(task.due_at) }}</div>
+            <div>
+              <strong>Created at:</strong> {{ formatDate(task.created_at) }}
+            </div>
+            <div>
+              <strong>Updated at:</strong> {{ formatDate(task.updated_at) }}
+            </div>
           </div>
-          <div><strong>Due at:</strong> {{ formatDate(task.due_at) }}</div>
-          <div>
-            <strong>Created at:</strong> {{ formatDate(task.created_at) }}
-          </div>
-          <div>
-            <strong>Updated at:</strong> {{ formatDate(task.updated_at) }}
-          </div>
-        </div>
+        </transition>
       </div>
     </div>
   </div>
