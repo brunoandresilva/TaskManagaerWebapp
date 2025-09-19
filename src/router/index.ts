@@ -24,7 +24,7 @@ router.beforeEach(async (to) => {
     // sincroniza com storage se necessário
     auth.token = getToken();
   }
-  if (auth.token && !auth.user && !auth.loadingMain) {
+  if (auth.token && !auth.loadingMain) {
     try {
       await auth.fetchMain();
     } catch {}

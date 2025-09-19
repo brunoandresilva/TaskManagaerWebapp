@@ -9,6 +9,15 @@ import { ref, computed } from "vue";
 const sidePanelOpen = ref(false);
 const auth = useAuthStore();
 const router = useRouter();
+const showAddTaskModal = ref(false);
+
+const newTask = ref({
+  title: "",
+  description: "",
+  status: "todo",
+  priority: 0,
+  due_at: "",
+});
 
 // Filter state and logic
 const statusOptions = [
@@ -49,6 +58,24 @@ function handleLogout() {
 function handleSidePanelClose() {
   sidePanelOpen.value = false;
 }
+function handleCreateTask() {
+  showAddTaskModal.value = true;
+}
+
+function submitTask() {
+  if (!newTask.value.title) return;
+
+  auth.createTask(newTask.value);
+
+  showAddTaskModal.value = false;
+  newTask.value = {
+    title: "",
+    description: "",
+    status: "todo",
+    priority: 0,
+    due_at: "",
+  };
+}
 </script>
 
 <template>
@@ -83,7 +110,7 @@ function handleSidePanelClose() {
       <!-- Add more header content here if needed -->
     </header>
     <!-- show tasks with filter -->
-    <div class="p-6 space-y-4 max-w-4xl mx-auto">
+    <div class="p-6 space-y-4 max-w-2xl mx-auto flex flex-col items-center">
       <!-- Filter UI -->
       <div class="mb-4 flex flex-wrap gap-6 items-end">
         <!-- Status filter -->
@@ -131,6 +158,110 @@ function handleSidePanelClose() {
         </button>
       </div>
       <TaskViewer :tasks="filteredTasks" />
+      <button
+        class="flex items-center gap-2 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors shadow"
+        @click="handleCreateTask()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Add Task
+      </button>
     </div>
+    <transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <!-- Add Task Modal -->
+      <div
+        v-if="showAddTaskModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+      >
+        <div class="bg-btn rounded-lg shadow-lg p-6 w-full max-w-md">
+          <h2 class="text-xl font-bold mb-4">Add Task</h2>
+          <form @submit.prevent="submitTask">
+            <div class="mb-3">
+              <label class="block font-semibold mb-1"
+                >Title <span class="text-red-500">*</span></label
+              >
+              <input
+                v-model="newTask.title"
+                type="text"
+                class="w-full bg-primary border rounded px-3 py-2"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Description</label>
+              <textarea
+                v-model="newTask.description"
+                class="w-full bg-primary border rounded px-3 py-2"
+                rows="2"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Status</label>
+              <select
+                v-model="newTask.status"
+                class="w-full bg-primary border rounded px-3 py-2"
+              >
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="block font-semibold mb-1">Priority</label>
+              <select
+                v-model="newTask.priority"
+                class="w-full bg-primary border rounded px-3 py-2"
+              >
+                <option :value="0">Low</option>
+                <option :value="1">Medium</option>
+                <option :value="2">High</option>
+                <option :value="3">Critical</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label class="block font-semibold mb-1">Due At</label>
+              <input
+                v-model="newTask.due_at"
+                type="date"
+                class="w-full bg-primary border rounded px-3 py-2"
+              />
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                @click="showAddTaskModal = false"
+                class="px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 rounded bg-primary text-gray-600 font-semibold hover:bg-btn_hover"
+              >
+                Add
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>

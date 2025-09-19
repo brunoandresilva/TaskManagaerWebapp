@@ -15,12 +15,19 @@ type Task = {
   updated_at: string;
 };
 type DashboardResponse = Task[];
-import { getToken, setToken, clearToken } from "@/lib/token";
+import {
+  getToken,
+  setToken,
+  clearToken,
+  getUser,
+  setUser,
+  clearUser,
+} from "@/lib/token";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     token: getToken(),
-    user: null as User | null,
+    user: getUser(),
     loadingMain: false,
     tasks: [] as Task[],
     todo_counter: 0,
@@ -39,6 +46,7 @@ export const useAuthStore = defineStore("auth", {
       this.token = data?.user?.token;
       setToken(this.token);
       this.user = { username: data?.user?.username, id: data?.user?.id };
+      setUser(this.user);
       await this.fetchMain();
     },
     logout() {
@@ -49,6 +57,7 @@ export const useAuthStore = defineStore("auth", {
       this.in_progress_counter = 0;
       this.done_counter = 0;
       clearToken();
+      clearUser();
     },
     async fetchMain() {
       if (!this.token) return;
@@ -70,6 +79,22 @@ export const useAuthStore = defineStore("auth", {
         console.error("Error fetching main data:", error);
       } finally {
         this.loadingMain = false;
+      }
+    },
+    async createTask(task: {
+      title: string;
+      description: string;
+      status: string;
+      priority: number;
+      due_at: string | null;
+    }) {
+      if (!this.token) return;
+      try {
+        const { data } = await api.post("/api/tasks", task);
+        this.tasks.push(data);
+        console.log(data);
+      } catch (error) {
+        console.error("Error creating task:", error);
       }
     },
   },

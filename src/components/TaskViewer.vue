@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 w-full">
     <div
       v-for="task in tasks"
       :key="task.id"
