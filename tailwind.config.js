@@ -8,9 +8,7 @@ export default {
         btn: "#C5AF8C",
         btn_hover: "#9A7F56",
       },
-      fontFamily: {
-        sans: ["Roboto"],
-      },
+      fontFamily: {},
     },
   },
   plugins: [],

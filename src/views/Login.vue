@@ -53,23 +53,26 @@ async function onSubmit() {
 
         <form class="mt-6 space-y-4" @submit.prevent="onSubmit">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Username</label>
-            <input
-              v-model="username"
-              type="text"
-              required
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label class="block text-sm text-gray-600 mb-1"
+              >Username<input
+                v-model="username"
+                name="username"
+                autocomplete="off"
+                type="text"
+                required
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            /></label>
           </div>
 
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Password</label>
-            <input
-              v-model="password"
-              type="password"
-              required
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label class="block text-sm text-gray-600 mb-1"
+              >Password<input
+                v-model="password"
+                name="password"
+                type="password"
+                required
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            /></label>
           </div>
 
           <button

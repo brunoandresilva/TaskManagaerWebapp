@@ -83,10 +83,10 @@ export const useAuthStore = defineStore("auth", {
     },
     async createTask(task: {
       title: string;
-      description: string;
+      description: string | null;
       status: string;
       priority: number;
-      due_at: string | null;
+      due_at?: string | null;
     }) {
       if (!this.token) return;
       try {
@@ -95,6 +95,7 @@ export const useAuthStore = defineStore("auth", {
         console.log(data);
       } catch (error) {
         console.error("Error creating task:", error);
+        throw error;
       }
     },
   },

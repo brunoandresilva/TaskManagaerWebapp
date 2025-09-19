@@ -5,13 +5,23 @@ import SidePanel from "@/components/SidePanel.vue";
 import TaskTracker from "@/components/TaskTracker.vue";
 import TaskViewer from "@/components/TaskViewer.vue";
 import { ref, computed } from "vue";
+import { useToast } from "vue-toastification";
 
+const toast = useToast();
 const sidePanelOpen = ref(false);
 const auth = useAuthStore();
 const router = useRouter();
 const showAddTaskModal = ref(false);
 
-const newTask = ref({
+type Task = {
+  title: string;
+  description: string | null;
+  status: "todo" | "in_progress" | "done";
+  priority: 0 | 1 | 2 | 3;
+  due_at?: string | null;
+};
+
+const newTask = ref<Task>({
   title: "",
   description: "",
   status: "todo",
@@ -62,24 +72,46 @@ function handleCreateTask() {
   showAddTaskModal.value = true;
 }
 
-function submitTask() {
+async function submitTask() {
   if (!newTask.value.title) return;
 
-  auth.createTask(newTask.value);
+  if (newTask.value.due_at === "") {
+    delete newTask.value.due_at;
+  }
 
-  showAddTaskModal.value = false;
-  newTask.value = {
-    title: "",
-    description: "",
-    status: "todo",
-    priority: 0,
-    due_at: "",
-  };
+  try {
+    await auth.createTask(newTask.value);
+    toast.success("Task created successfully!");
+    showAddTaskModal.value = false;
+    newTask.value = {
+      title: "",
+      description: "",
+      status: "todo",
+      priority: 0,
+      due_at: undefined,
+    };
+  } catch (error) {
+    toast.error("Error creating task");
+    showAddTaskModal.value = false;
+  }
+}
+
+function handleDeleteTask(id: number) {
+  // TODO: implement delete task
+}
+
+function handleEditTask(id: number) {
+  // TODO: implement edit task
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-primary">
+    <div
+      v-if="sidePanelOpen"
+      class="fixed inset-0 z-40 bg-black bg-opacity-30"
+      @click="handleSidePanelClose"
+    ></div>
     <SidePanel
       :username="auth.user?.username || 'Guest'"
       :open="sidePanelOpen"
@@ -88,13 +120,24 @@ function submitTask() {
     />
 
     <!-- tasks header -->
-    <header class="grid grid-cols-3 items-center w-full">
+    <header class="grid grid-cols-3 items-start w-full">
       <div class="flex justify-start">
         <button
           @click="sidePanelOpen = true"
-          class="w-auto mt-4 ml-4 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors"
+          class="w-auto ml-4 mt-4 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors"
         >
-          Open Side Panel
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="size-6"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M3 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 5.25Zm0 4.5A.75.75 0 0 1 3.75 9h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 9.75Zm0 4.5a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Zm0 4.5a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z"
+              clip-rule="evenodd"
+            />
+          </svg>
         </button>
       </div>
 
@@ -157,7 +200,11 @@ function submitTask() {
           Reset
         </button>
       </div>
-      <TaskViewer :tasks="filteredTasks" />
+      <TaskViewer
+        :tasks="filteredTasks"
+        @delete-task="handleDeleteTask"
+        @edit-task="handleEditTask"
+      />
       <button
         class="flex items-center gap-2 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors shadow"
         @click="handleCreateTask()"
