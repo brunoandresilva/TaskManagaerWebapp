@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4 w-full">
-    <div class="max-h-[450px] overflow-y-auto space-y-4 w-full">
+    <div class="max-h-[65vh] overflow-y-auto space-y-4 w-full scrollbar-custom">
       <div
         v-for="task in tasks"
         :key="task.id"
@@ -14,9 +14,23 @@
             <div class="flex gap-4 mt-1 text-sm text-gray-700">
               <span>
                 Status:
-                <span :class="statusColor(task.status)">{{
+                <!-- <span :class="statusColor(task.status)">{{
                   statusLabel(task.status)
-                }}</span>
+                }}</span> -->
+                <select
+                  :value="task.status"
+                  @change="
+                    $emit('status-change', {
+                      id: task.id,
+                      status: ($event.target as HTMLSelectElement)?.value,
+                    })
+                  "
+                  class="rounded px-2 py-1 bg-primary"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
               </span>
               <span>Priority: {{ priorityLabel(task.priority) }}</span>
             </div>

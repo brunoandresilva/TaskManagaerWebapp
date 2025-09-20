@@ -123,6 +123,7 @@ async function confirmDeleteTask() {
 
 function handleEditTask(id: number) {
   const task = auth.tasks.find((t) => t.id === id);
+  if (task?.description === null) task.description = ""; // Ensure description is a string
   if (task) {
     updatedTask.value = { ...task }; // Copies all fields as defaults
     // Format due_at for date input
@@ -134,7 +135,6 @@ function handleEditTask(id: number) {
       updatedTask.value.completed_at = task.completed_at.slice(0, 10);
     }
   }
-  console.log("updatedTask:", updatedTask.value);
   taskIdToEdit.value = id;
   showEditTaskModal.value = true;
 }
@@ -164,10 +164,25 @@ async function confirmEditTask() {
     taskIdToEdit.value = null;
   }
 }
+
+async function updateTaskStatus({
+  id,
+  status,
+}: {
+  id: number;
+  status: Task["status"];
+}) {
+  try {
+    await auth.editTask(id, { status });
+    toast.success("Task status updated successfully!");
+  } catch (error) {
+    toast.error("Error updating task status");
+  }
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-primary">
+  <div class="flex flex-col min-h-screen bg-primary">
     <div
       v-if="sidePanelOpen"
       class="fixed inset-0 z-40 bg-black bg-opacity-30"
@@ -211,82 +226,160 @@ async function confirmEditTask() {
           :todo="auth.todo_counter || 0"
         />
       </div>
-      <!-- Add more header content here if needed -->
+      <!-- div com flex justify-end se quiser adicionar mais conteudo ao header -->
     </header>
-    <!-- show tasks with filter -->
-    <div class="p-6 space-y-4 max-w-2xl mx-auto flex flex-col items-center">
-      <!-- Filter UI -->
-      <div class="mb-4 flex flex-wrap gap-6 items-end">
-        <!-- Status filter -->
-        <div>
-          <label class="block font-semibold mb-1">Status</label>
-          <div class="flex gap-2">
-            <label
-              v-for="status in statusOptions"
-              :key="status.value"
-              class="flex items-center gap-1"
-            >
-              <input
-                type="checkbox"
-                :value="status.value"
-                v-model="selectedStatuses"
-              />
-              <span>{{ status.label }}</span>
-            </label>
-          </div>
-        </div>
-        <!-- Priority filter -->
-        <div>
-          <label class="block font-semibold mb-1">Priority</label>
-          <div class="flex gap-2">
-            <label
-              v-for="priority in priorityOptions"
-              :key="priority.value"
-              class="flex items-center gap-1"
-            >
-              <input
-                type="checkbox"
-                :value="priority.value"
-                v-model="selectedPriorities"
-              />
-              <span>{{ priority.label }}</span>
-            </label>
-          </div>
-        </div>
-        <!-- Reset button -->
-        <button
-          @click="resetFilters"
-          class="ml-4 px-3 py-1 rounded bg-gray-300 text-gray-700 hover:bg-gray-400 font-medium"
-        >
-          Reset
-        </button>
-      </div>
-      <TaskViewer
-        :tasks="filteredTasks"
-        @delete-task="handleDeleteTask"
-        @edit-task="handleEditTask"
-      />
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors shadow"
-        @click="handleCreateTask()"
+    <!-- show tasks with filter floating to the right, TaskViewer perfectly centered -->
+    <!-- show tasks with filter to the right, both inside a max-w-5xl container, no overflow -->
+    <div class="flex-1 w-full flex flex-col items-center p-6">
+      <div
+        class="w-full max-w-5xl relative flex flex-row items-start mx-auto"
+        style="min-height: 400px"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+        <!-- Absolutely centered TaskViewer -->
+        <div
+          class="absolute left-1/2 top-0 -translate-x-1/2 max-w-2xl w-full z-10"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
+          <TaskViewer
+            :tasks="filteredTasks"
+            @delete-task="handleDeleteTask"
+            @edit-task="handleEditTask"
+            @status-change="updateTaskStatus"
           />
-        </svg>
-        Add Task
-      </button>
+          <!-- Add Task button always at the bottom -->
+          <div class="py-5 flex justify-center">
+            <button
+              class="flex items-center gap-2 px-4 py-2 bg-btn text-gray-600 font-semibold rounded-lg hover:bg-btn_hover transition-colors shadow"
+              @click="handleCreateTask()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Task
+            </button>
+          </div>
+        </div>
+        <!-- Filter on the right (desktop only) -->
+        <aside
+          class="hidden lg:block max-w-xs flex-shrink-0 ml-auto sticky top-8 self-start z-20"
+        >
+          <div
+            class="bg-[#f6f1e7] rounded-xl shadow p-4 border border-[#e2d6c2] flex flex-col gap-4"
+          >
+            <div>
+              <label class="block font-semibold mb-1 text-gray-700"
+                >Status</label
+              >
+              <div class="flex flex-col gap-1">
+                <label
+                  v-for="status in statusOptions"
+                  :key="status.value"
+                  class="flex items-center gap-2 px-2 py-1 rounded hover:bg-[#e2d6c2] transition-colors cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :value="status.value"
+                    v-model="selectedStatuses"
+                    class="accent-[#bfa76a] w-4 h-4 rounded focus:ring-2 focus:ring-[#bfa76a]"
+                  />
+                  <span class="text-gray-700 text-sm">{{ status.label }}</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-gray-700"
+                >Priority</label
+              >
+              <div class="flex flex-col gap-1">
+                <label
+                  v-for="priority in priorityOptions"
+                  :key="priority.value"
+                  class="flex items-center gap-2 px-2 py-1 rounded hover:bg-[#e2d6c2] transition-colors cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :value="priority.value"
+                    v-model="selectedPriorities"
+                    class="accent-[#bfa76a] w-4 h-4 rounded focus:ring-2 focus:ring-[#bfa76a]"
+                  />
+                  <span class="text-gray-700 text-sm">{{
+                    priority.label
+                  }}</span>
+                </label>
+              </div>
+            </div>
+            <button
+              @click="resetFilters"
+              class="mt-2 px-4 py-2 rounded-lg bg-btn text-gray-600 font-semibold hover:bg-btn_hover transition-colors shadow border border-[#e2d6c2]"
+            >
+              Reset
+            </button>
+          </div>
+        </aside>
+      </div>
+      <!-- Responsive: filter below on mobile -->
+      <aside class="block lg:hidden w-full mt-6">
+        <div
+          class="bg-[#f6f1e7] rounded-xl shadow p-4 border border-[#e2d6c2] flex flex-col gap-4"
+        >
+          <div>
+            <label class="block font-semibold mb-1 text-gray-700">Status</label>
+            <div class="flex flex-col gap-1">
+              <label
+                v-for="status in statusOptions"
+                :key="status.value"
+                class="flex items-center gap-2 px-2 py-1 rounded hover:bg-[#e2d6c2] transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="status.value"
+                  v-model="selectedStatuses"
+                  class="accent-[#bfa76a] w-4 h-4 rounded focus:ring-2 focus:ring-[#bfa76a]"
+                />
+                <span class="text-gray-700 text-sm">{{ status.label }}</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-gray-700"
+              >Priority</label
+            >
+            <div class="flex flex-col gap-1">
+              <label
+                v-for="priority in priorityOptions"
+                :key="priority.value"
+                class="flex items-center gap-2 px-2 py-1 rounded hover:bg-[#e2d6c2] transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="priority.value"
+                  v-model="selectedPriorities"
+                  class="accent-[#bfa76a] w-4 h-4 rounded focus:ring-2 focus:ring-[#bfa76a]"
+                />
+                <span class="text-gray-700 text-sm">{{ priority.label }}</span>
+              </label>
+            </div>
+          </div>
+          <button
+            @click="resetFilters"
+            class="mt-2 px-4 py-2 rounded-lg bg-btn text-gray-600 font-semibold hover:bg-btn_hover transition-colors shadow border border-[#e2d6c2]"
+          >
+            Reset
+          </button>
+        </div>
+      </aside>
     </div>
+
     <transition
       enter-active-class="transition duration-200"
       enter-from-class="opacity-0 scale-95"

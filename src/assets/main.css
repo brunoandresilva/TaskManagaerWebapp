@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom scrollbar for Chrome, Edge, and Safari */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #c5af8c; /* Match your app's palette */
+  border-radius: 4px;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #b29b77;
+}
+
+/* Custom scrollbar for Firefox */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #c5af8c transparent;
+}
+.scrollbar-custom:hover {
+  scrollbar-color: #b29b77 transparent;
+}

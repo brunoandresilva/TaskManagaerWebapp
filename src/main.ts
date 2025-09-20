@@ -11,6 +11,6 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(Toast, {
-  // You can add options here if desired
+  timeout: 2000,
 });
 app.mount("#app");

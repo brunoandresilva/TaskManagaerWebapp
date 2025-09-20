@@ -67,15 +67,7 @@ export const useAuthStore = defineStore("auth", {
         const { data } = await api.get<DashboardResponse>("/api/tasks");
         console.log(data);
         this.tasks = data;
-        this.done_counter = data.filter(
-          (task) => task.status === "done"
-        ).length;
-        this.in_progress_counter = data.filter(
-          (task) => task.status === "in_progress"
-        ).length;
-        this.todo_counter = data.filter(
-          (task) => task.status === "todo"
-        ).length;
+        this.setCounters();
       } catch (error) {
         console.error("Error fetching main data:", error);
       } finally {
@@ -93,7 +85,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const { data } = await api.post("/api/tasks", task);
         this.tasks.push(data);
-        console.log(data);
+        this.setCounters();
       } catch (error) {
         console.error("Error creating task:", error);
         throw error;
@@ -104,6 +96,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         await api.delete(`/api/tasks/${id}`);
         this.tasks = this.tasks.filter((task) => task.id !== id);
+        this.setCounters();
       } catch (error) {
         console.error("Error deleting task:", error);
         throw error;
@@ -117,10 +110,22 @@ export const useAuthStore = defineStore("auth", {
         if (index !== -1) {
           this.tasks[index] = data;
         }
+        this.setCounters();
       } catch (error) {
         console.error("Error editing task:", error);
         throw error;
       }
+    },
+    setCounters() {
+      this.done_counter = this.tasks.filter(
+        (task) => task.status === "done"
+      ).length;
+      this.in_progress_counter = this.tasks.filter(
+        (task) => task.status === "in_progress"
+      ).length;
+      this.todo_counter = this.tasks.filter(
+        (task) => task.status === "todo"
+      ).length;
     },
   },
 });
